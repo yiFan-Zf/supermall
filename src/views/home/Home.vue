@@ -52,10 +52,11 @@ import BackTop from "components/content/backTop/BackTop";
 
 // 网络组件
 import { getHomeMultidata, getHomeGoods } from "network/home.js";
-import { debounce } from "common/utils.js";
+import { itemListenerMixin } from "common/mixin";
 
 export default {
   name: "Home",
+  mixins: [itemListenerMixin],
   data() {
     return {
       banners: [],
@@ -70,6 +71,7 @@ export default {
       tabOffsetTop: 0,
       isTabFixed: false,
       saveY: 0,
+      itemImgListener: null,
     };
   },
   computed: {
@@ -107,16 +109,21 @@ export default {
   // },
   beforeRouteLeave(to, from, next) {
     this.saveY = this.$refs.scroll.getScrollY();
+
+    // 在离开的时候取消全局事件的监听
+    this.$bus.$off("itemImageLoad", this.itemImgListener);
     next();
   },
   mounted() {
     // 监听item图片加载完成 解决滚动卡顿bug 在每一次图片加载完成后调用refresh方法，更新scrollerHeight的值
-    const refresh = debounce(this.$refs.scroll.refresh, 50);
-    this.$bus.$on("itemImageLoad", () => {
-      //   // console.log(this.$refs.scroll);
-      // this.$refs.scroll && this.$refs.scroll.refresh();
-      refresh();
-    });
+    // const refresh = debounce(this.$refs.scroll.refresh, 50);
+    // // 对监听的事件进行保存
+    // this.itemImgListener = () => {
+    //   //   // console.log(this.$refs.scroll);
+    //   // this.$refs.scroll && this.$refs.scroll.refresh();
+    //   refresh();
+    // };
+    // this.$bus.$on("itemImageLoad", this.itemImgListener);
     /*防抖函数起作用的过程：
     如果我们直接执行refresh，那么refresh函数会被执行30次
     可以将refresh函数传入到debounce函数中，生成一个新得函数
